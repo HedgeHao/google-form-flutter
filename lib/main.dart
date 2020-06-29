@@ -4,6 +4,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:google_forms_ui/models.dart';
 
+import 'finishPage.dart';
+
 List<int> selectedAnswer;
 double contentWidth;
 
@@ -21,25 +23,43 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: '資訊安全評量',
-        home: Scaffold(
-          backgroundColor: Colors.grey[100],
-          body: Row(
-            children: [
-              Spacer(),
-              SingleChildScrollView(
-                  child: Padding(
-                padding: EdgeInsets.only(top: 10, bottom: 10),
-                child: FormContent(),
-              )),
-              Spacer(),
-            ],
-          ),
-        ));
+      title: '資訊安全評量',
+      initialRoute: '/',
+      routes: {
+        '/': (context) => MainPage(),
+        '/finish': (context) => FinishPage(),
+      },
+    );
   }
 }
 
-class FormContent extends StatelessWidget {
+class MainPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Color(0xFFF0EBF8),
+      body: Row(
+        children: [
+          Spacer(),
+          SingleChildScrollView(
+              child: Padding(
+            padding: EdgeInsets.only(top: 10, bottom: 10),
+            child: FormContent(),
+          )),
+          Spacer(),
+        ],
+      ),
+    );
+  }
+}
+
+class FormContent extends StatefulWidget {
+  FormContentState createState() => FormContentState();
+}
+
+class FormContentState extends State<FormContent> {
+  bool showHint = false;
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -49,6 +69,9 @@ class FormContent extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             QuestionModel q = snapshot.data;
+            if (selectedAnswer == null) {
+              selectedAnswer = List<int>(q.ques.length).map((e) => -1).toList();
+            }
             return Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -89,7 +112,7 @@ class FormContent extends StatelessWidget {
                         ))
                   ],
                 ),
-                QuestionList(q.ques),
+                QuestionList(q.ques, showHint),
                 Container(
                     width: contentWidth,
                     height: 50,
@@ -100,9 +123,17 @@ class FormContent extends StatelessWidget {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          color: Colors.purple,
+                          color: Color(0xFF7349BD),
                           child: Text('提交', style: TextStyle(color: Colors.white)),
-                          onPressed: () {},
+                          onPressed: () {
+                            if (selectedAnswer.where((e) => e == -1).length > 0) {
+                              setState(() {
+                                showHint = true;
+                              });
+                            } else {
+                              Navigator.pushNamed(context, '/finish', arguments: q.title);
+                            }
+                          },
                         ),
                         Spacer()
                       ],
@@ -113,20 +144,20 @@ class FormContent extends StatelessWidget {
                     style: TextStyle(color: Colors.grey),
                   ),
                   InkWell(
-                      child: Text('檢舉濫用情形', style: TextStyle(color: Colors.grey)),
+                      child: Text('檢舉濫用情形', style: TextStyle(color: Colors.grey, decoration: TextDecoration.underline)),
                       onTap: () async {
                         await launch(
                             'https://docs.google.com/forms/u/0/d/e/1FAIpQLSevLUgYM0t8c6herd9Chx_fvA78esneNY6kMP_1VJxOaLKIFA/reportabuse?source=https://docs.google.com/forms/d/e/1FAIpQLSevLUgYM0t8c6herd9Chx_fvA78esneNY6kMP_1VJxOaLKIFA/viewform');
                       }),
-                  Text('。'),
+                  Text('-', style: TextStyle(color: Colors.grey)),
                   InkWell(
-                      child: Text('服務條款', style: TextStyle(color: Colors.grey)),
+                      child: Text('服務條款', style: TextStyle(color: Colors.grey, decoration: TextDecoration.underline)),
                       onTap: () async {
                         await launch('https://policies.google.com/terms');
                       }),
-                  Text('。'),
+                  Text('-', style: TextStyle(color: Colors.grey)),
                   InkWell(
-                      child: Text('隱私權政策', style: TextStyle(color: Colors.grey)),
+                      child: Text('隱私權政策', style: TextStyle(color: Colors.grey, decoration: TextDecoration.underline)),
                       onTap: () async {
                         await launch('https://policies.google.com/privacy');
                       }),
@@ -147,17 +178,17 @@ class FormContent extends StatelessWidget {
 
 class QuestionList extends StatelessWidget {
   final List<Ques> q;
+  final bool showHint;
 
-  QuestionList(this.q) {
-    selectedAnswer = List<int>(this.q.length);
-  }
+  QuestionList(this.q, this.showHint);
 
   @override
   Widget build(BuildContext context) {
-    int index = 0;
+    int index = -1;
     return Column(
         children: q.map((e) {
-      return Question(e, index);
+      index++;
+      return Question(e, index, showHint);
     }).toList());
   }
 }
@@ -165,16 +196,19 @@ class QuestionList extends StatelessWidget {
 class Question extends StatelessWidget {
   final Ques ques;
   final int quesIndex;
+  final bool showHint;
 
-  Question(this.ques, this.quesIndex);
+  Question(this.ques, this.quesIndex, this.showHint);
 
   @override
   Widget build(BuildContext context) {
+    print('i=${this.quesIndex}, showHint=$showHint, $selectedAnswer');
     return Padding(
         padding: EdgeInsets.only(top: 8.0),
         child: Container(
             width: contentWidth,
             decoration: BoxDecoration(
+              border: (showHint && selectedAnswer[this.quesIndex] == -1) ? Border.all(width: 1, color: Colors.red) : null,
               color: Colors.white,
               shape: BoxShape.rectangle,
               borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -182,9 +216,20 @@ class Question extends StatelessWidget {
             child: Padding(
                 padding: EdgeInsets.all(12),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(this.ques.content),
                     SelectionGroup(this.ques.options, quesIndex),
+                    Visibility(
+                      visible: showHint && selectedAnswer[this.quesIndex] == -1,
+                      child: Row(children: [
+                        Icon(
+                          Icons.error_outline,
+                          color: Colors.red,
+                        ),
+                        Text('  這是必填問題', style: TextStyle(color: Colors.red)),
+                      ]),
+                    ),
                   ],
                 ))));
   }
@@ -208,7 +253,8 @@ class SelectionGroupState extends State<SelectionGroup> {
   }
 
   void updateGroupValue(int v) {
-    print('Radio Click:' + v.toString());
+    print(widget.ques_num);
+    print(selectedAnswer);
     setState(() {
       selectedAnswer[widget.ques_num] = v;
     });
@@ -221,8 +267,8 @@ class SelectionGroupState extends State<SelectionGroup> {
       widgets.add(Row(
         children: [
           Radio(
-              value: i, // start from 1
-              groupValue: selectedAnswer[widget.ques_num] == null ? '' : selectedAnswer[widget.ques_num],
+              value: i,
+              groupValue: selectedAnswer[widget.ques_num] == -1 ? '' : selectedAnswer[widget.ques_num],
               activeColor: Colors.purple,
               onChanged: (value) {
                 updateGroupValue(value);
