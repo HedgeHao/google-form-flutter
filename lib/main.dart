@@ -39,14 +39,15 @@ class MainPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Color(0xFFF0EBF8),
       body: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Spacer(),
-          SingleChildScrollView(
-              child: Padding(
-            padding: EdgeInsets.only(top: 10, bottom: 10),
-            child: FormContent(),
-          )),
-          Spacer(),
+          Padding(
+              padding: EdgeInsets.only(right: 8, left: 8),
+              child: SingleChildScrollView(
+                  child: Padding(
+                padding: EdgeInsets.only(top: 10, bottom: 10),
+                child: FormContent(),
+              ))),
         ],
       ),
     );
@@ -63,7 +64,7 @@ class FormContentState extends State<FormContent> {
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
-    contentWidth = size.width <= 650 ? size.width : 650;
+    contentWidth = size.width <= 650 * 0.95 ? size.width : 650;
     return FutureBuilder(
         future: loadData(context),
         builder: (context, snapshot) {
@@ -72,103 +73,105 @@ class FormContentState extends State<FormContent> {
             if (selectedAnswer == null) {
               selectedAnswer = List<int>(q.ques.length).map((e) => -1).toList();
             }
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Stack(
-                  alignment: Alignment.topLeft,
+            return Container(
+                width: contentWidth * 0.9,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Container(
-                      width: contentWidth,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: Colors.purple[800],
-                        shape: BoxShape.rectangle,
-                        borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                      ),
-                    ),
-                    Padding(
-                        padding: EdgeInsets.only(top: 15),
-                        child: Container(
-                          width: contentWidth,
+                    Stack(
+                      alignment: Alignment.topLeft,
+                      children: [
+                        Container(
+                          width: contentWidth * 0.9,
                           height: 100,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Colors.purple[800],
                             shape: BoxShape.rectangle,
-                            borderRadius: BorderRadius.only(bottomLeft: Radius.circular(8.0), bottomRight: Radius.circular(8.0)),
+                            borderRadius: BorderRadius.all(Radius.circular(8.0)),
                           ),
-                        )),
-                    Padding(
-                        padding: EdgeInsets.only(top: 25, left: 12),
-                        child: Text(
-                          q.title,
-                          style: TextStyle(fontSize: 32),
-                        )),
-                    Padding(
-                        padding: EdgeInsets.only(top: 80, left: 12),
-                        child: Text(
-                          '* 必填',
-                          style: TextStyle(fontSize: 16, color: Colors.red),
-                        ))
-                  ],
-                ),
-                QuestionList(q.ques, showHint),
-                Container(
-                    width: contentWidth,
-                    height: 50,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        FlatButton(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          color: Color(0xFF7349BD),
-                          child: Text('提交', style: TextStyle(color: Colors.white)),
-                          onPressed: () {
-                            if (selectedAnswer.where((e) => e == -1).length > 0) {
-                              setState(() {
-                                showHint = true;
-                              });
-                            } else {
-                              Navigator.pushNamed(context, '/finish', arguments: q.title);
-                            }
-                          },
                         ),
-                        Spacer()
+                        Padding(
+                            padding: EdgeInsets.only(top: 15),
+                            child: Container(
+                              width: contentWidth,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.rectangle,
+                                borderRadius: BorderRadius.only(bottomLeft: Radius.circular(8.0), bottomRight: Radius.circular(8.0)),
+                              ),
+                            )),
+                        Padding(
+                            padding: EdgeInsets.only(top: 25, left: 12),
+                            child: Text(
+                              q.title,
+                              style: TextStyle(fontSize: 32),
+                            )),
+                        Padding(
+                            padding: EdgeInsets.only(top: 80, left: 12),
+                            child: Text(
+                              '* 必填',
+                              style: TextStyle(fontSize: 16, color: Colors.red),
+                            ))
                       ],
-                    )),
-                Row(children: [
-                  Text(
-                    'Google 並未認可或建議這項內容。',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                  InkWell(
-                      child: Text('檢舉濫用情形', style: TextStyle(color: Colors.grey, decoration: TextDecoration.underline)),
-                      onTap: () async {
-                        await launch(
-                            'https://docs.google.com/forms/u/0/d/e/1FAIpQLSevLUgYM0t8c6herd9Chx_fvA78esneNY6kMP_1VJxOaLKIFA/reportabuse?source=https://docs.google.com/forms/d/e/1FAIpQLSevLUgYM0t8c6herd9Chx_fvA78esneNY6kMP_1VJxOaLKIFA/viewform');
-                      }),
-                  Text('-', style: TextStyle(color: Colors.grey)),
-                  InkWell(
-                      child: Text('服務條款', style: TextStyle(color: Colors.grey, decoration: TextDecoration.underline)),
-                      onTap: () async {
-                        await launch('https://policies.google.com/terms');
-                      }),
-                  Text('-', style: TextStyle(color: Colors.grey)),
-                  InkWell(
-                      child: Text('隱私權政策', style: TextStyle(color: Colors.grey, decoration: TextDecoration.underline)),
-                      onTap: () async {
-                        await launch('https://policies.google.com/privacy');
-                      }),
-                ]),
-                InkWell(
-                    child: Text('Google 表單', style: TextStyle(color: Colors.grey, fontSize: 24)),
-                    onTap: () async {
-                      await launch('https://www.google.com/forms/about/?utm_source=product&utm_medium=forms_logo&utm_campaign=forms');
-                    })
-              ],
-            );
+                    ),
+                    QuestionList(q.ques, showHint),
+                    Container(
+                        width: contentWidth,
+                        height: 50,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            FlatButton(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              color: Color(0xFF7349BD),
+                              child: Text('提交', style: TextStyle(color: Colors.white)),
+                              onPressed: () {
+                                if (selectedAnswer.where((e) => e == -1).length > 0) {
+                                  setState(() {
+                                    showHint = true;
+                                  });
+                                } else {
+                                  Navigator.pushNamed(context, '/finish', arguments: q.title);
+                                }
+                              },
+                            ),
+                            Spacer()
+                          ],
+                        )),
+                    Wrap(children: [
+                      Text(
+                        'Google 並未認可或建議這項內容。',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                      InkWell(
+                          child: Text('檢舉濫用情形', style: TextStyle(color: Colors.grey, decoration: TextDecoration.underline)),
+                          onTap: () async {
+                            await launch(
+                                'https://docs.google.com/forms/u/0/d/e/1FAIpQLSevLUgYM0t8c6herd9Chx_fvA78esneNY6kMP_1VJxOaLKIFA/reportabuse?source=https://docs.google.com/forms/d/e/1FAIpQLSevLUgYM0t8c6herd9Chx_fvA78esneNY6kMP_1VJxOaLKIFA/viewform');
+                          }),
+                      Text('-', style: TextStyle(color: Colors.grey)),
+                      InkWell(
+                          child: Text('服務條款', style: TextStyle(color: Colors.grey, decoration: TextDecoration.underline)),
+                          onTap: () async {
+                            await launch('https://policies.google.com/terms');
+                          }),
+                      Text('-', style: TextStyle(color: Colors.grey)),
+                      InkWell(
+                          child: Text('隱私權政策', style: TextStyle(color: Colors.grey, decoration: TextDecoration.underline)),
+                          onTap: () async {
+                            await launch('https://policies.google.com/privacy');
+                          }),
+                    ]),
+                    InkWell(
+                        child: Text('Google 表單', style: TextStyle(color: Colors.grey, fontSize: 24)),
+                        onTap: () async {
+                          await launch('https://www.google.com/forms/about/?utm_source=product&utm_medium=forms_logo&utm_campaign=forms');
+                        })
+                  ],
+                ));
           } else {
             return Container();
           }
@@ -206,21 +209,21 @@ class Question extends StatelessWidget {
     return Padding(
         padding: EdgeInsets.only(top: 8.0),
         child: Container(
-            width: contentWidth,
+            width: contentWidth * 0.9,
             decoration: BoxDecoration(
               border: (showHint && selectedAnswer[this.quesIndex] == -1) ? Border.all(width: 1, color: Colors.red) : null,
               color: Colors.white,
               shape: BoxShape.rectangle,
               borderRadius: BorderRadius.all(Radius.circular(8)),
             ),
-            child: Padding(
-                padding: EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(this.ques.content),
-                    SelectionGroup(this.ques.options, quesIndex),
-                    Visibility(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(padding: EdgeInsets.all(20), child: Text(this.ques.content)),
+                SelectionGroup(this.ques.options, quesIndex),
+                Padding(
+                  padding: EdgeInsets.only(left: 12, bottom: 8),
+                  child: Visibility(
                       visible: showHint && selectedAnswer[this.quesIndex] == -1,
                       child: Row(children: [
                         Icon(
@@ -228,10 +231,10 @@ class Question extends StatelessWidget {
                           color: Colors.red,
                         ),
                         Text('  這是必填問題', style: TextStyle(color: Colors.red)),
-                      ]),
-                    ),
-                  ],
-                ))));
+                      ])),
+                ),
+              ],
+            )));
   }
 }
 
@@ -264,7 +267,8 @@ class SelectionGroupState extends State<SelectionGroup> {
   Widget build(BuildContext context) {
     List<Widget> widgets = [];
     for (int i = 0; i < widget.selections.length; i++) {
-      widgets.add(Row(
+      widgets.add(Flexible(
+          child: Row(
         children: [
           Radio(
               value: i,
@@ -273,9 +277,9 @@ class SelectionGroupState extends State<SelectionGroup> {
               onChanged: (value) {
                 updateGroupValue(value);
               }),
-          Text(widget.selections[i])
+          Expanded(child: Text(widget.selections[i])),
         ],
-      ));
+      )));
     }
     return Wrap(
       crossAxisAlignment: WrapCrossAlignment.center,
